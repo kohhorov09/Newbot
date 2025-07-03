@@ -5,9 +5,8 @@ import logging
 import json
 import os
 
-BOT_TOKEN = "7838589688:AAGam0Yj0wz1IErdJPj7LIGwPBGY8Z3C9aA"
+BOT_TOKEN = "8119295074:AAGTSSnlxju8NomJOanYnulH-18js88vQCo"
 ADMIN_ID = 7114973309
-
 DATA_FILE = "data.json"
 
 def load_data():
@@ -37,6 +36,13 @@ logging.basicConfig(level=logging.INFO)
 def is_subscribed(member):
     return member.status in [ChatMemberStatus.MEMBER, ChatMemberStatus.ADMINISTRATOR, ChatMemberStatus.OWNER]
 
+async def is_user_subscribed(channel, user_id, context):
+    try:
+        member = await context.bot.get_chat_member(channel, user_id)
+        return is_subscribed(member)
+    except:
+        return False
+
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     if user_id not in user_db:
@@ -45,13 +51,15 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     not_subscribed = [ch for ch in required_channels if not await is_user_subscribed(ch, user_id, context)]
     if not_subscribed:
-        buttons = [[InlineKeyboardButton(f"📢 {ch}", url=f"https://t.me/{ch.lstrip('@')}")] for ch in not_subscribed]
-        buttons.append([InlineKeyboardButton("✅ Tekshirish", callback_data="check_subs")])
-        await update.message.reply_text("‼️ O‘yinni boshlashdan oldin quyidagi kanallarga obuna bo‘ling:", reply_markup=InlineKeyboardMarkup(buttons))
+        buttons = [[InlineKeyboardButton(f"\ud83d\udce2 {ch}", url=f"https://t.me/{ch.lstrip('@')}")] for ch in not_subscribed]
+        await update.message.reply_text("\u203c\ufe0f first subscribe to the channels and send the /start command:", reply_markup=InlineKeyboardMarkup(buttons))
         return
 
-    game_button = InlineKeyboardButton("🎮 Join Game", web_app=WebAppInfo(url="https://coin-ton-6pu6.vercel.app/"))
-    await update.message.reply_text("✅ Obuna tasdiqlandi. O‘yinni boshlang!", reply_markup=InlineKeyboardMarkup([[game_button]]))
+    game_button = InlineKeyboardButton("\ud83c\udfae Let's Go", web_app=WebAppInfo(url="https://react-rho-black-87.vercel.app/"))
+    await update.message.reply_text("\u2705 Subscription confirmed. Start the game!", reply_markup=InlineKeyboardMarkup([[game_button]]))
+
+
+
 
 async def is_user_subscribed(channel, user_id, context):
     try:
@@ -62,7 +70,7 @@ async def is_user_subscribed(channel, user_id, context):
 
 async def admin(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_user.id not in ADMINS:
-        await update.message.reply_text("⛔ Bu bo‘lim faqat adminlar uchun.")
+        await update.message.reply_text("⛔ This section is for admins only.")
         return
 
     keyboard = ReplyKeyboardMarkup([
@@ -100,10 +108,9 @@ async def handle_admin_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         result_text = (
             f"✅ <b>Yuborilgan:</b> {success} ta\n"
-            f"{chr(10).join(success_list) if success_list else '🚫 Hech kimga yuborilmadi'}\n\n"
-            f"❌ <b>Xatolik:</b> {failed} ta\n"
-            f"{chr(10).join(failed_list) if failed_list else '✅ Hamma xabar yuborildi'}"
-        )
+             f"❌ <b>Xatolik:</b> {failed} ta"
+)
+
 
         await update.message.reply_text(result_text, parse_mode="HTML")
         return
@@ -311,5 +318,6 @@ if __name__ == "__main__":
     app.add_handler(CommandHandler("admin", admin))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_admin_text))
     app.add_handler(CallbackQueryHandler(handle_callback))
+    
     print("✅ Bot ishga tushdi")
     asyncio.run(app.run_polling())
